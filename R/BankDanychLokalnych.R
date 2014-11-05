@@ -36,6 +36,10 @@ getBDLsearch <- function(query = "", debug = 0, raw = FALSE) {
   do.call(what = rbind, dgs)
 }
 
+url2id <- function(url){
+	if( is.null(url) ) return(NULL);
+	tail(strsplit(url,"/")[[1]],1)
+}
 
 getBDLseries <- function(metric_id = "", 
                          slice = NULL,
@@ -69,7 +73,15 @@ getBDLseries <- function(metric_id = "",
     
   dgs <- lapply(seq_along(document$series), function(sn) {
     s <- document$series[[sn]]
-    tmp <- data.frame(do.call(what = rbind, args = s$series), units = s$units)
+    attrs <- list(
+	units = s$units,
+        wojewodztwo_id = url2id(s$wojewodztwo_id),
+	powiat_id = url2id(s$powiat_id),
+	gmina_id = url2id(s$gmina_id)
+	);
+    attrs[sapply(attrs, is.null)] <- NULL
+
+    tmp <- data.frame(do.call(what = rbind, args = s$series), attrs )
     for (i in ncol(met):1)
       tmp <- data.frame(dimension = met[sn,i], tmp, row.names = 1:nrow(tmp))
     for (i in 1:ncol(tmp))
